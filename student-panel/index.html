@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Panel • RamShila VidyaMandir Library</title>
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="/favicon.svg" />
+    <style>
+      :root{
+        --green:#16A34A;
+        --yellow:#F59E0B;
+        --red:#DC2626;
+        --blue:#2563EB;
+        --bg:#f7fafc;
+        --ink:#111827;
+        --muted:#6b7280;
+      }
+      html,body,#root{height:100%}
+      body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+      .library-banner{
+        background: linear-gradient(120deg, rgba(37,99,235,.08), rgba(22,163,74,.08)), url('/assets/banner.jpg');
+        background-size: cover;
+        background-position: center;
+        filter: saturate(1.05);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
