@@ -1,44 +1,37 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Button from '../components/UI/Button.jsx'
-import api, { checkHealth } from '../services/api.js'
-import ConnectionRefused from '../components/ConnectionRefused.jsx'
+// Minimal, dependency-free login page
 
 export default function Login() {
   const [user, setUser] = useState('')
   const [pass, setPass] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [connectionOk, setConnectionOk] = useState(null)
   const navigate = useNavigate()
-
-  useEffect(() => {
-    checkHealth().then(setConnectionOk)
-  }, [])
-
-  const handleRetry = () => {
-    setConnectionOk(null)
-    checkHealth().then(setConnectionOk)
-  }
 
   const handleLogin = async (e) => {
     if (e) e.preventDefault()
     setError('')
     setLoading(true)
     try {
-      const { data } = await api.post('/auth/login', { username: user, password: pass })
+      const res = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: user, password: pass })
+      })
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        throw new Error(j.message || 'Invalid credentials')
+      }
+      const data = await res.json()
       localStorage.setItem('liberry_token', data.token)
       navigate('/')
     } catch (err) {
-      const isNetwork = err.code === 'ERR_NETWORK' || err.message === 'Network Error'
-      setError(isNetwork ? 'Cannot connect to server. Ensure the backend is running on port 4000.' : (err.response?.data?.message || 'Invalid credentials'))
+      const msg = err?.message || 'Login failed'
+      setError(msg)
     } finally {
       setLoading(false)
     }
-  }
-
-  if (connectionOk === false) {
-    return <ConnectionRefused onRetry={handleRetry} />
   }
 
   return (
@@ -75,9 +68,9 @@ export default function Login() {
               required
             />
           </div>
-          <Button className="w-full mt-2" type="submit" disabled={loading}>
+          <button className="w-full mt-2 bg-info text-white rounded-md py-2" type="submit" disabled={loading}>
             {loading ? 'Logging in...' : 'Login'}
-          </Button>
+          </button>
         </form>
       </div>
     </div>
