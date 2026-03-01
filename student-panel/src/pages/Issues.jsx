@@ -1,32 +1,35 @@
 import { useEffect, useState } from 'react'
 import { isAxiosError } from 'axios'
-import { listIssues, submitIssue, Issue } from '../lib/api'
+import { listIssues, submitIssue } from '../lib/api'
 
 export default function Issues() {
-  const [issues, setIssues] = useState<Issue[]>([])
+  const [issues, setIssues] = useState([])
   const [subject, setSubject] = useState('')
   const [description, setDescription] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+
   useEffect(() => {
-    listIssues().then(setIssues).catch((err: unknown) => {
+    listIssues().then(setIssues).catch((err) => {
       const msg = isAxiosError(err)
-        ? ((err.response?.data as { message?: string })?.message ?? err.message)
+        ? (err.response?.data?.message ?? err.message)
         : 'Failed to load issues'
       setError(msg)
     })
   }, [])
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e) {
     e.preventDefault()
-    setLoading(true); setError(null)
+    setLoading(true)
+    setError(null)
     try {
       const created = await submitIssue({ subject, description })
       setIssues([created, ...issues])
-      setSubject(''); setDescription('')
-    } catch (err: unknown) {
+      setSubject('')
+      setDescription('')
+    } catch (err) {
       const msg = isAxiosError(err)
-        ? ((err.response?.data as { message?: string })?.message ?? err.message)
+        ? (err.response?.data?.message ?? err.message)
         : 'Failed to submit issue'
       setError(msg)
     } finally {

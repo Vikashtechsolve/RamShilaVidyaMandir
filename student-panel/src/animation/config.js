@@ -36,8 +36,8 @@ export const AnimationConfig = {
     reveal: 'easeOut'
   },
   distances: {
-    toBagX: 0.58, // 58% of stage width
-    backX: 0.16   // 16% of stage width
+    toBagX: 0.58,
+    backX: 0.16
   },
   loop: false
 }

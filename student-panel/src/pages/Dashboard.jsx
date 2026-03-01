@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { fetchSummary, StudentSummary } from '../lib/api'
+import { fetchSummary } from '../lib/api'
 
 export default function Dashboard() {
-  const [data, setData] = useState<StudentSummary | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [data, setData] = useState(null)
+  const [error, setError] = useState(null)
+
   useEffect(() => {
     fetchSummary().then(setData).catch(err => {
       setError(err?.response?.data?.message || 'Failed to load dashboard')
     })
   }, [])
-  const statusBadge = (feeStatus: StudentSummary['feeStatus'], active: boolean, dueDate?: string) => {
+
+  const statusBadge = (feeStatus, active, dueDate) => {
     const now = new Date()
     const due = dueDate ? new Date(dueDate) : now
     const diff = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
@@ -18,6 +20,7 @@ export default function Dashboard() {
     if (diff <= 7) return <span className="badge bg-yellow">Due Soon</span>
     return <span className="badge bg-green">{active ? 'Active' : 'Inactive'}</span>
   }
+
   return (
     <div>
       <motion.div className="banner library-banner"
@@ -38,7 +41,7 @@ export default function Dashboard() {
           <div style={{ width: 8, height: 40, borderRadius: 999, background: 'var(--blue)' }} />
           <div>
             <div className="muted">Package</div>
-            <div>{data?.packageName || '-' } • {data?.packageDuration || '-'}</div>
+            <div>{data?.packageName || '-'} • {data?.packageDuration || '-'}</div>
           </div>
         </div>
         <div className="card kpi">

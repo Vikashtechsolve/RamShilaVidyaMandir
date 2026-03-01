@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchSeat, SeatInfo as SeatData } from '../lib/api'
+import { fetchSeat } from '../lib/api'
 
 export default function SeatInfo() {
-  const [data, setData] = useState<SeatData | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [data, setData] = useState(null)
+  const [error, setError] = useState(null)
+
   useEffect(() => {
     fetchSeat().then(setData).catch(err => {
       setError(err?.response?.data?.message || 'Failed to load seat info')
@@ -11,8 +12,7 @@ export default function SeatInfo() {
   }, [])
 
   const layout = useMemo(() => {
-    const seats = Array.from({ length: 48 }, (_, i) => `S${String(i + 1).padStart(2, '0')}`)
-    return seats
+    return Array.from({ length: 48 }, (_, i) => `S${String(i + 1).padStart(2, '0')}`)
   }, [])
 
   return (

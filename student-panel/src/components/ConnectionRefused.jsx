@@ -1,4 +1,4 @@
-export default function ConnectionRefused({ onRetry }: { onRetry?: () => void }) {
+export default function ConnectionRefused({ onRetry }) {
   return (
     <div className="connection-refused">
       <div className="connection-refused-icon">

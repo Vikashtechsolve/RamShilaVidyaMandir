@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react'
 import { isAxiosError } from 'axios'
-import { fetchProfile, StudentProfile } from '../lib/api'
+import { fetchProfile } from '../lib/api'
 
 export default function Profile() {
-  const [data, setData] = useState<StudentProfile | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [data, setData] = useState(null)
+  const [error, setError] = useState(null)
+
   useEffect(() => {
-    fetchProfile().then(setData).catch((err: unknown) => {
+    fetchProfile().then(setData).catch((err) => {
       const msg = isAxiosError(err)
-        ? ((err.response?.data as { message?: string })?.message ?? err.message)
+        ? (err.response?.data?.message ?? err.message)
         : 'Failed to load profile'
       setError(msg)
     })
   }, [])
+
   return (
     <div className="card">
       <h3>My Profile</h3>

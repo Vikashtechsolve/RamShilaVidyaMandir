@@ -42,7 +42,7 @@ export default function App() {
   )
 }
 
-function RequireAuth({ children }: { children: JSX.Element }) {
+function RequireAuth({ children }) {
   const navigate = useNavigate()
   useEffect(() => {
     const s = getSession()

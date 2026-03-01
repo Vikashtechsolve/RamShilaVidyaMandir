@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
-import { fetchFees, FeeInfo } from '../lib/api'
+import { fetchFees } from '../lib/api'
 
 export default function Fees() {
-  const [data, setData] = useState<FeeInfo | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [data, setData] = useState(null)
+  const [error, setError] = useState(null)
+
   useEffect(() => {
     fetchFees().then(setData).catch(err => {
       setError(err?.response?.data?.message || 'Failed to load fees')
     })
   }, [])
+
   const pending = data?.status === 'Pending'
+
   return (
     <div className="card">
       <h3>Fees</h3>

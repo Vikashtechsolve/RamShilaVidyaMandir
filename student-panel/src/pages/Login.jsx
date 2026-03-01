@@ -7,7 +7,7 @@ import { setSession } from '../lib/session'
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
@@ -15,7 +15,7 @@ export default function Login() {
     setError(null)
   }, [])
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e) {
     e.preventDefault()
     setError(null)
     setLoading(true)
@@ -23,10 +23,10 @@ export default function Login() {
       const res = await loginStudent({ email, password })
       setSession({ token: res.token, role: res.role, name: res.name })
       navigate('/')
-    } catch (err: unknown) {
+    } catch (err) {
       let msg = 'Login failed'
       if (isAxiosError(err)) {
-        msg = (err.response?.data as { message?: string })?.message ?? err.message
+        msg = err.response?.data?.message ?? err.message
       }
       setError(msg)
     } finally {
