@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { getStudents, searchStudents, createStudent, updateStudent, deleteStudent, toggleStudentStatus } from '../lib/api'
+import { getStudents, searchStudents, createStudent, updateStudent, deleteStudent, toggleStudentStatus, setStudentPassword } from '../lib/api'
 
 function Modal({ title, onClose, children }) {
   return (
@@ -15,6 +15,24 @@ function Modal({ title, onClose, children }) {
   )
 }
 
+function CopyBtn({ text }) {
+  const [copied, setCopied] = useState(false)
+  function copy() {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
+  return (
+    <button onClick={copy} title="Copy" style={{
+      background: 'none', border: 'none', cursor: 'pointer',
+      fontSize: 13, color: copied ? 'var(--success)' : 'var(--text-light)',
+      padding: '0 4px'
+    }}>
+      {copied ? '✅' : '📋'}
+    </button>
+  )
+}
+
 export default function Students() {
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
@@ -22,12 +40,20 @@ export default function Students() {
   const [success, setSuccess] = useState('')
   const [search, setSearch] = useState('')
 
+  // modals
   const [showAdd, setShowAdd] = useState(false)
   const [showEdit, setShowEdit] = useState(null)
   const [showDelete, setShowDelete] = useState(null)
+  const [showPassword, setShowPassword] = useState(null)
+  const [showLoginInfo, setShowLoginInfo] = useState(null)
 
   const [form, setForm] = useState({ name: '', mobile: '', email: '' })
+  const [passwordForm, setPasswordForm] = useState({ password: '', confirm: '' })
+  const [showPwd, setShowPwd] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  // track plain-text passwords set by admin (stored in memory per session)
+  const [knownPasswords, setKnownPasswords] = useState({})
 
   const load = useCallback(async (q = '') => {
     try {
@@ -48,16 +74,18 @@ export default function Students() {
   }, [search, load])
 
   function flash(msg, isError = false) {
-    if (isError) { setError(msg); setTimeout(() => setError(''), 3000) }
-    else { setSuccess(msg); setTimeout(() => setSuccess(''), 3000) }
+    if (isError) { setError(msg); setTimeout(() => setError(''), 4000) }
+    else { setSuccess(msg); setTimeout(() => setSuccess(''), 4000) }
   }
 
   async function handleAdd(e) {
     e.preventDefault()
     setSaving(true)
     try {
-      await createStudent(form)
-      flash('Student added successfully!')
+      const student = await createStudent(form)
+      // default password is student123
+      setKnownPasswords(prev => ({ ...prev, [student.id]: 'student123' }))
+      flash(`Student added! Login: ${student.email} / student123`)
       setShowAdd(false)
       setForm({ name: '', mobile: '', email: '' })
       load(search)
@@ -100,6 +128,28 @@ export default function Students() {
     }
   }
 
+  async function handleSetPassword(e) {
+    e.preventDefault()
+    if (passwordForm.password !== passwordForm.confirm) {
+      flash('Passwords do not match', true)
+      return
+    }
+    if (passwordForm.password.length < 4) {
+      flash('Password must be at least 4 characters', true)
+      return
+    }
+    setSaving(true)
+    try {
+      await setStudentPassword(showPassword.id, passwordForm.password)
+      setKnownPasswords(prev => ({ ...prev, [showPassword.id]: passwordForm.password }))
+      flash(`Password updated for ${showPassword.name}!`)
+      setShowPassword(null)
+      setPasswordForm({ password: '', confirm: '' })
+    } catch (err) {
+      flash(err.response?.data?.message || 'Failed to set password', true)
+    } finally { setSaving(false) }
+  }
+
   function openEdit(s) {
     setForm({ name: s.name, mobile: s.mobile, email: s.email })
     setShowEdit(s)
@@ -108,6 +158,12 @@ export default function Students() {
   function openAdd() {
     setForm({ name: '', mobile: '', email: '' })
     setShowAdd(true)
+  }
+
+  function openPassword(s) {
+    setPasswordForm({ password: '', confirm: '' })
+    setShowPwd(false)
+    setShowPassword(s)
   }
 
   return (
@@ -145,7 +201,8 @@ export default function Students() {
                   <th>ID</th>
                   <th>Name</th>
                   <th>Mobile</th>
-                  <th>Email</th>
+                  <th>Login Email</th>
+                  <th>Password</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -153,23 +210,53 @@ export default function Students() {
               <tbody>
                 {students.map(s => (
                   <tr key={s.id}>
-                    <td><code style={{ fontSize: 12, background: '#F1F5F9', padding: '2px 6px', borderRadius: 4 }}>{s.id}</code></td>
+                    <td>
+                      <code style={{ fontSize: 12, background: '#F1F5F9', padding: '2px 6px', borderRadius: 4 }}>{s.id}</code>
+                    </td>
                     <td style={{ fontWeight: 500 }}>{s.name}</td>
                     <td>{s.mobile}</td>
-                    <td style={{ color: 'var(--text-light)' }}>{s.email}</td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <span style={{ fontSize: 13, color: 'var(--accent)' }}>{s.email}</span>
+                        <CopyBtn text={s.email} />
+                      </div>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        {knownPasswords[s.id] ? (
+                          <>
+                            <code style={{ fontSize: 12, background: '#F0FDF4', color: '#065F46', padding: '2px 8px', borderRadius: 4, border: '1px solid #BBF7D0' }}>
+                              {knownPasswords[s.id]}
+                            </code>
+                            <CopyBtn text={knownPasswords[s.id]} />
+                          </>
+                        ) : (
+                          <span style={{ fontSize: 12, color: 'var(--text-light)' }}>••••••••</span>
+                        )}
+                        <button
+                          className="btn btn-outline btn-sm"
+                          onClick={() => openPassword(s)}
+                          title="Set Password"
+                          style={{ padding: '3px 8px', fontSize: 11 }}
+                        >
+                          🔑 Set
+                        </button>
+                      </div>
+                    </td>
                     <td>
                       <span className={`badge ${s.status === 'active' ? 'badge-green' : 'badge-red'}`}>
                         {s.status}
                       </span>
                     </td>
                     <td>
-                      <div style={{ display: 'flex', gap: 6 }}>
+                      <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                        <button className="btn btn-primary btn-sm" onClick={() => setShowLoginInfo(s)}>👁️ Login Info</button>
                         <button className="btn btn-outline btn-sm" onClick={() => openEdit(s)}>✏️ Edit</button>
                         <button
                           className={`btn btn-sm ${s.status === 'active' ? 'btn-warning' : 'btn-success'}`}
                           onClick={() => handleToggle(s.id)}
                         >
-                          {s.status === 'active' ? '🚫 Deactivate' : '✅ Activate'}
+                          {s.status === 'active' ? '🚫' : '✅'}
                         </button>
                         <button className="btn btn-danger btn-sm" onClick={() => setShowDelete(s)}>🗑️</button>
                       </div>
@@ -182,7 +269,7 @@ export default function Students() {
         )}
       </div>
 
-      {/* Add Modal */}
+      {/* ── Add Modal ── */}
       {showAdd && (
         <Modal title="Add New Student" onClose={() => setShowAdd(false)}>
           <form onSubmit={handleAdd}>
@@ -198,7 +285,10 @@ export default function Students() {
               <label>Email (optional)</label>
               <input className="form-control" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="Auto-generated if blank" />
             </div>
-            <p style={{ fontSize: 12, color: 'var(--text-light)', marginBottom: 14 }}>Default password will be: <strong>student123</strong></p>
+            <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 8, padding: '10px 14px', marginBottom: 14, fontSize: 13 }}>
+              🔑 Default password will be: <strong>student123</strong><br />
+              <span style={{ color: 'var(--text-light)', fontSize: 12 }}>You can change it after adding the student.</span>
+            </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-outline" onClick={() => setShowAdd(false)}>Cancel</button>
               <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : 'Add Student'}</button>
@@ -207,7 +297,7 @@ export default function Students() {
         </Modal>
       )}
 
-      {/* Edit Modal */}
+      {/* ── Edit Modal ── */}
       {showEdit && (
         <Modal title={`Edit — ${showEdit.name}`} onClose={() => setShowEdit(null)}>
           <form onSubmit={handleEdit}>
@@ -231,7 +321,112 @@ export default function Students() {
         </Modal>
       )}
 
-      {/* Delete Confirm */}
+      {/* ── Set Password Modal ── */}
+      {showPassword && (
+        <Modal title={`Set Password — ${showPassword.name}`} onClose={() => setShowPassword(null)}>
+          <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>
+            📧 Login Email: <strong style={{ color: 'var(--accent)' }}>{showPassword.email}</strong>
+            <CopyBtn text={showPassword.email} />
+          </div>
+          <form onSubmit={handleSetPassword}>
+            <div className="form-group">
+              <label>New Password *</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  className="form-control"
+                  type={showPwd ? 'text' : 'password'}
+                  value={passwordForm.password}
+                  onChange={e => setPasswordForm(f => ({ ...f, password: e.target.value }))}
+                  placeholder="Min 4 characters"
+                  required
+                  style={{ paddingRight: 40 }}
+                />
+                <button type="button" onClick={() => setShowPwd(v => !v)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>
+                  {showPwd ? '🙈' : '👁️'}
+                </button>
+              </div>
+            </div>
+            <div className="form-group">
+              <label>Confirm Password *</label>
+              <input
+                className="form-control"
+                type={showPwd ? 'text' : 'password'}
+                value={passwordForm.confirm}
+                onChange={e => setPasswordForm(f => ({ ...f, confirm: e.target.value }))}
+                placeholder="Re-enter password"
+                required
+              />
+              {passwordForm.confirm && passwordForm.password !== passwordForm.confirm && (
+                <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>Passwords do not match</span>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-outline" onClick={() => setShowPassword(null)}>Cancel</button>
+              <button type="submit" className="btn btn-primary" disabled={saving || passwordForm.password !== passwordForm.confirm}>
+                {saving ? 'Saving...' : '🔑 Set Password'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* ── Login Info Modal ── */}
+      {showLoginInfo && (
+        <Modal title={`Login Details — ${showLoginInfo.name}`} onClose={() => setShowLoginInfo(null)}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ background: '#F8FAFC', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
+              <div style={{ fontSize: 11, color: 'var(--text-light)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Student ID</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <code style={{ fontSize: 15, fontWeight: 700, color: 'var(--accent)' }}>{showLoginInfo.id}</code>
+                <CopyBtn text={showLoginInfo.id} />
+              </div>
+            </div>
+
+            <div style={{ background: '#F8FAFC', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
+              <div style={{ fontSize: 11, color: 'var(--text-light)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Login Email</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{showLoginInfo.email}</span>
+                <CopyBtn text={showLoginInfo.email} />
+              </div>
+            </div>
+
+            <div style={{ background: '#F8FAFC', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
+              <div style={{ fontSize: 11, color: 'var(--text-light)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Password</div>
+              {knownPasswords[showLoginInfo.id] ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <code style={{ fontSize: 15, fontWeight: 700, color: '#065F46', background: '#D1FAE5', padding: '3px 10px', borderRadius: 6 }}>
+                    {knownPasswords[showLoginInfo.id]}
+                  </code>
+                  <CopyBtn text={knownPasswords[showLoginInfo.id]} />
+                </div>
+              ) : (
+                <div>
+                  <div style={{ fontSize: 13, color: 'var(--text-light)', marginBottom: 8 }}>
+                    Password not visible — it was set before this session.<br />
+                    Default is <code style={{ background: '#F1F5F9', padding: '1px 6px', borderRadius: 4 }}>student123</code> unless changed.
+                  </div>
+                  <button className="btn btn-primary btn-sm" onClick={() => { setShowLoginInfo(null); openPassword(showLoginInfo) }}>
+                    🔑 Set New Password
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10, padding: 14, fontSize: 13 }}>
+              <strong>Student Panel URL:</strong><br />
+              <span style={{ color: 'var(--accent)' }}>http://localhost:5174/login</span>
+              <CopyBtn text="http://localhost:5174/login" />
+            </div>
+          </div>
+
+          <div className="modal-footer">
+            <button className="btn btn-outline" onClick={() => setShowLoginInfo(null)}>Close</button>
+            <button className="btn btn-primary" onClick={() => { setShowLoginInfo(null); openPassword(showLoginInfo) }}>🔑 Change Password</button>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Delete Confirm ── */}
       {showDelete && (
         <Modal title="Delete Student" onClose={() => setShowDelete(null)}>
           <p style={{ marginBottom: 20 }}>Are you sure you want to delete <strong>{showDelete.name}</strong>? This cannot be undone.</p>

@@ -30,6 +30,7 @@ export const createStudent = (data) => api.post('/admin/students', data).then(r 
 export const updateStudent = (id, data) => api.put(`/admin/students/${id}`, data).then(r => r.data)
 export const deleteStudent = (id) => api.delete(`/admin/students/${id}`).then(r => r.data)
 export const toggleStudentStatus = (id) => api.patch(`/admin/students/${id}/toggle-status`).then(r => r.data)
+export const setStudentPassword = (id, password) => api.patch(`/admin/students/${id}/set-password`, { password }).then(r => r.data)
 
 export const getFees = () => api.get('/admin/fees').then(r => r.data)
 export const assignFee = (studentId, packageId) => api.post('/admin/fees/assign', { studentId, packageId }).then(r => r.data)

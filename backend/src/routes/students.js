@@ -92,4 +92,21 @@ r.patch('/:id/toggle-status', async (req, res) => {
   }
 })
 
+r.patch('/:id/set-password', async (req, res) => {
+  try {
+    const id = req.params.id
+    const { password } = req.body || {}
+    if (!password || password.length < 4) {
+      return res.status(400).json({ message: 'Password must be at least 4 characters' })
+    }
+    const student = await Student.findOne({ id })
+    if (!student) return res.status(404).json({ message: 'Student not found' })
+    student.passwordHash = await bcrypt.hash(password, 10)
+    await student.save()
+    res.json({ success: true, message: 'Password updated successfully' })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
 export const studentsRouter = r
