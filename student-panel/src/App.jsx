@@ -1,4 +1,4 @@
-import { NavLink, Route, Routes, useNavigate } from 'react-router-dom'
+import { NavLink, Route, Routes, useNavigate, useLocation } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
 import Fees from './pages/Fees'
@@ -10,23 +10,27 @@ import { getSession, logout } from './lib/session'
 
 export default function App() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const isLoginPage = location.pathname === '/login'
   useEffect(() => {
     const s = getSession()
     if (!s) navigate('/login')
   }, [navigate])
   return (
     <div className="app">
-      <div className="topbar">
-        <div className="brand">📚 Student Panel</div>
-        <div className="nav">
-          <NavLink to="/" end>Dashboard</NavLink>
-          <NavLink to="/profile">My Profile</NavLink>
-          <NavLink to="/fees">Fees</NavLink>
-          <NavLink to="/seat">Seat</NavLink>
-          <NavLink to="/issues">Issues</NavLink>
-          <button onClick={() => { logout(); navigate('/login') }}>Logout</button>
+      {!isLoginPage && (
+        <div className="topbar">
+          <div className="brand">📚 Student Panel</div>
+          <div className="nav">
+            <NavLink to="/" end>Dashboard</NavLink>
+            <NavLink to="/profile">My Profile</NavLink>
+            <NavLink to="/fees">Fees</NavLink>
+            <NavLink to="/seat">Seat</NavLink>
+            <NavLink to="/issues">Issues</NavLink>
+            <button onClick={() => { logout(); navigate('/login') }}>Logout</button>
+          </div>
         </div>
-      </div>
+      )}
       <div className="content">
         <Routes>
           <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
