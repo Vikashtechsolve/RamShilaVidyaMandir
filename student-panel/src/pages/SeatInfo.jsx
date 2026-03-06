@@ -17,16 +17,16 @@ export default function SeatInfo() {
 
   return (
     <div>
-      <div className="card">
-        <h3>Seat Information</h3>
+      <div className="glass-card">
+        <h3 className="card-heading">Seat Allocation</h3>
         <p className="muted">Your assigned seat details</p>
         {error && <div className="alert">{error}</div>}
         <div className="field"><span className="label">Seat Number</span><span className="value">#{data?.seatNumber || '-'}</span></div>
         <div className="field"><span className="label">Timing</span><span className="value">{data?.timing || '-'}</span></div>
         <div className="field"><span className="label">Status</span><span className="value">{data?.status || '-'}</span></div>
       </div>
-      <div className="card" style={{ marginTop: 12 }}>
-        <h4>Seat Layout</h4>
+      <div className="glass-card" style={{ marginTop: 16 }}>
+        <h4 className="card-heading">Seat Layout</h4>
         <p className="muted">Simple highlight shows your seat</p>
         <div className="seat-layout">
           {layout.map(seat => {

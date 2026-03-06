@@ -58,12 +58,35 @@ export function studentRouter() {
       const createdAt = student.createdAt ? student.createdAt.toISOString().slice(0, 10) : '2024-01-15'
       res.json({
         name: student.name,
+        mobile: student.mobile,
+        email: student.email,
         joiningDate: createdAt,
         packageName: pkg?.name || '-',
         seatNumber: assignment ? seatIdToDisplay(assignment.seatId) : '-',
         timing: assignment?.timing || '-',
         active: student.status === 'active',
       })
+    } catch (err) {
+      res.status(500).json({ message: err.message })
+    }
+  })
+
+  r.patch('/profile', async (req, res) => {
+    try {
+      const studentId = req.user?.studentId
+      if (!studentId) return res.status(401).json({ message: 'Unauthorized' })
+      const { name, mobile } = req.body || {}
+      const update = {}
+      if (typeof name === 'string' && name.trim()) update.name = name.trim()
+      if (typeof mobile === 'string' && mobile.trim()) update.mobile = mobile.trim()
+      if (Object.keys(update).length === 0) return res.status(400).json({ message: 'No valid fields to update' })
+      const student = await Student.findOneAndUpdate(
+        { id: studentId },
+        { $set: update },
+        { new: true }
+      )
+      if (!student) return res.status(404).json({ message: 'Student not found' })
+      res.json({ name: student.name, mobile: student.mobile })
     } catch (err) {
       res.status(500).json({ message: err.message })
     }

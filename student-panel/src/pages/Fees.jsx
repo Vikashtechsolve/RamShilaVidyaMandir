@@ -14,8 +14,8 @@ export default function Fees() {
   const pending = data?.status === 'Pending'
 
   return (
-    <div className="card">
-      <h3>Fees</h3>
+    <div className="glass-card">
+      <h3 className="card-heading">Fees / Payment</h3>
       <p className="muted">Your package payment details</p>
       {error && <div className="alert">{error}</div>}
       {pending && <div className="alert">Your payment is pending. Please clear dues before the due date.</div>}

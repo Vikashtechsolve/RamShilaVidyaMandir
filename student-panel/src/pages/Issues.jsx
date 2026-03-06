@@ -39,8 +39,8 @@ export default function Issues() {
 
   return (
     <div>
-      <div className="card">
-        <h3>Submit Issue / Complaint</h3>
+      <div className="glass-card">
+        <h3 className="card-heading">Submit Issue / Complaint</h3>
         <p className="muted">Share problems or feedback with admin</p>
         {error && <div className="alert">{error}</div>}
         <form onSubmit={onSubmit} style={{ display: 'grid', gap: 10 }}>
@@ -59,8 +59,8 @@ export default function Issues() {
           </button>
         </form>
       </div>
-      <div className="card" style={{ marginTop: 12 }}>
-        <h3>My Issues</h3>
+      <div className="glass-card" style={{ marginTop: 16 }}>
+        <h3 className="card-heading">My Issues</h3>
         <div className="issue-list">
           {issues.map(x => (
             <div className="issue-item" key={x.id}>

@@ -36,6 +36,11 @@ export async function fetchProfile() {
   return data
 }
 
+export async function updateProfile(payload) {
+  const { data } = await api.patch('/student/me/profile', payload)
+  return data
+}
+
 export async function fetchFees() {
   const { data } = await api.get('/student/me/fees')
   return data
