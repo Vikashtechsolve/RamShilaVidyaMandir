@@ -1,0 +1,7 @@
+{
+  "name": "ram-shila-library",
+  "private": true,
+  "scripts": {
+    "build": "cd student-panel && npm install && npm run build"
+  }
+}
