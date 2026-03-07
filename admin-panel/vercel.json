@@ -1,7 +1,6 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "student-panel/dist",
-  "installCommand": "cd student-panel && npm install",
+  "outputDirectory": "dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]

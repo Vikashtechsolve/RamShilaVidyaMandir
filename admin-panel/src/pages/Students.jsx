@@ -413,9 +413,8 @@ export default function Students() {
             </div>
 
             <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10, padding: 14, fontSize: 13 }}>
-              <strong>Student Panel URL:</strong><br />
-              <span style={{ color: 'var(--accent)' }}>http://localhost:5174/login</span>
-              <CopyBtn text="http://localhost:5174/login" />
+              <strong>Student Panel Login:</strong><br />
+              <span style={{ color: 'var(--text-light)', fontSize: 12 }}>Students can log in at the Student Panel with the email and password above.</span>
             </div>
           </div>
 

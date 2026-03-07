@@ -8,7 +8,7 @@ import Issues from './pages/Issues'
 import Notifications from './pages/Notifications'
 import Login from './pages/Login'
 import Layout from './components/Layout'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { getSession, logout } from './lib/session'
 
 export default function App() {
@@ -48,13 +48,17 @@ export default function App() {
 
 function RequireAuth({ children }) {
   const navigate = useNavigate()
+  const [allowed, setAllowed] = useState(false)
+
   useEffect(() => {
     const s = getSession()
-    if (!s) navigate('/login')
-    if (s?.role !== 'student') {
+    if (!s || s.role !== 'student') {
       logout()
-      navigate('/login')
+      navigate('/login', { replace: true })
+    } else {
+      setAllowed(true)
     }
   }, [navigate])
-  return children
+
+  return allowed ? children : null
 }
